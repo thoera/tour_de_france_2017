@@ -98,7 +98,7 @@ g <- df %>%
        caption = "data: cyclingnews.com",
        x = "",
        y = "time difference (seconds)") +
-  grey_theme() +
+  theme_minimal_grey() +
   theme(legend.position = "right",
         legend.title = element_blank())
 
@@ -107,8 +107,31 @@ gg <- ggplotGrob(g)
 gg$layout$clip[gg$layout$name == "panel"] = "off"
 grid::grid.draw(gg)
 
-# save the plot
 # ggsave("tour_de_france_2017/plots/time_difference.png", gg,
+#        width = 16, height = 9, dpi = 150)
+
+# small multiples are a good alternative
+df %>%
+  filter(rider %in% top_10 & rider != "Christopher Froome") %>%
+  mutate(rider = forcats::fct_reorder(rider, final_position)) %>%
+  ggplot(aes(x = stage, y = time_to, group = rider, color = rider)) +
+  geom_line(size = 0.85) +
+  geom_point(size = 3) +
+  geom_text(data = stages_profiles, aes(x = stage, y = 0,
+                                        label = paste0("(", profile, ")")),
+            vjust = 8, color = "grey30", size = 3, inherit.aes = FALSE) +
+  scale_x_discrete(labels = paste0("Stage ", seq_len(length(stages)))) +
+  facet_wrap( ~ rider, ncol = 3) +
+  labs(title = "A close race until the final stages",
+       subtitle = paste0("Time difference (in seconds) between Christopher ",
+                         "Froome and the rest of the top 10\n"),
+       caption = "data: cyclingnews.com",
+       x = "",
+       y = "time difference (seconds)") +
+  theme_minimal_grey() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.75, hjust = 1))
+
+# ggsave("tour_de_france_2017/plots/time_difference_facets.png",
 #        width = 16, height = 9, dpi = 150)
 
 # plot the rank of the riders of the final top 10 along the race
@@ -128,7 +151,7 @@ g <- df %>%
        caption = "data: cyclingnews.com",
        x = "",
        y = "position") +
-  grey_theme() +
+  theme_minimal_grey() +
   theme(legend.position = "right",
         legend.title = element_blank())
 
@@ -136,11 +159,34 @@ gg <- ggplotGrob(g)
 gg$layout$clip[gg$layout$name == "panel"] = "off"
 grid::grid.draw(gg)
 
-# save the plot
 # ggsave("tour_de_france_2017/plots/rank_top10.png", gg,
 #        width = 16, height = 9, dpi = 150)
 
-# same type of plot for the 167 riders who finished the race
+# again small multiples are a good alternative
+df %>%
+  filter(rider %in% top_10) %>%
+  mutate(rider = forcats::fct_reorder(rider, final_position)) %>%
+  ggplot(aes(x = stage, y = position, group = rider, color = rider)) +
+  geom_line(size = 0.85) +
+  geom_point(size = 3) +
+  geom_text(data = stages_profiles, aes(x = stage, y = 0,
+                                        label = paste0("(", profile, ")")),
+            vjust = 8, color = "grey30", size = 3, inherit.aes = FALSE) +
+  scale_x_discrete(labels = paste0("Stage ", seq_len(length(stages)))) +
+  facet_wrap( ~ rider, ncol = 3) +
+  labs(title = paste0("Christopher Froome never left the top 6 ",
+                      "of the general classification"),
+       subtitle = "Rank of the riders of the final top 10 after each stage",
+       caption = "data: cyclingnews.com",
+       x = "",
+       y = "position") +
+  theme_minimal_grey() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.75, hjust = 1))
+
+# ggsave("tour_de_france_2017/plots/rank_top10_facets.png",
+#        width = 16, height = 9, dpi = 150)
+
+# same type of plot but for the 167 riders who finished the race
 g <- ggplot(data = df, aes(x = stage, y = position, group = rider)) +
   geom_line(color = "grey60", size = 0.65) +
   geom_text(data = stages_profiles, aes(x = stage, y = 0,
@@ -154,14 +200,13 @@ g <- ggplot(data = df, aes(x = stage, y = position, group = rider)) +
        caption = "data: cyclingnews.com",
        x = "",
        y = "position") +
-  grey_theme() +
+  theme_minimal_grey() +
   theme(panel.grid.major = element_line(color = "grey80", size = 0.25))
 
 gg <- ggplotGrob(g)
 gg$layout$clip[gg$layout$name == "panel"] = "off"
 grid::grid.draw(gg)
 
-# save the plot
 # ggsave("tour_de_france_2017/plots/rank_all.png", gg,
 #        width = 16, height = 9, dpi = 150)
 
@@ -186,7 +231,7 @@ draw_team_ranks <- function(team_filter, team_color) {
     labs(title = team_filter,
          x = "",
          y = "position") +
-    grey_theme() +
+    theme_minimal_grey() +
     theme(axis.text.x = element_text(angle = 45, vjust = 0.75, hjust = 1))
 }
 
@@ -198,13 +243,11 @@ ag2r_fdj <- gridExtra::grid.arrange(teams_ranks[["AG2R La Mondiale"]],
                                     teams_ranks[["FDJ"]],
                                     ncol = 2)
 
-# save the plot
 # ggsave("tour_de_france_2017/plots/ag2r_fdj.png", ag2r_fdj,
 #        width = 16, height = 9, dpi = 150)
 
-# a sort of a radar plot for each stage
-
-# the function below is adapted from this blog post:
+# sort of a radar plot to show the time difference to C. Froome after each stage
+# the function below is adapted from this post:
 # http://www.cmap.polytechnique.fr/~lepennec/R/Radar/RadarAndParallelPlots.html
 
 coord_radar <- function(theta = "x", start = 0, direction = 1) {
@@ -238,7 +281,7 @@ draw_radar <- function(df, stage, top = 5, ymin = -10, ymax = 200) {
                    filter(final_position %in% seq_len(top)) %>%
                    arrange(final_position),
                  aes(x = rider, y = time_to, group = stage),
-                 color = "grey60", fill = NA, size = 1, show.legend = FALSE) +
+                 color = "grey40", fill = NA, size = 0.7, show.legend = FALSE) +
     geom_polygon(data = df %>%
                    filter(stage == paste0("stage_",
                                           stages_[length(stages_)]) &
@@ -246,7 +289,8 @@ draw_radar <- function(df, stage, top = 5, ymin = -10, ymax = 200) {
                    filter(final_position %in% seq_len(top)) %>%
                    arrange(final_position),
                  aes(x = rider, y = time_to, group = stage),
-                 color = "#000000", fill = NA, size = 1, show.legend = FALSE) +
+                 color = "#ffdb4d", fill = NA, size = 1.2,
+                 show.legend = FALSE) +
     scale_x_discrete(limits = setdiff(top_10,
                                       "Christopher Froome")[1:(top - 1)]) +
     scale_y_continuous(limits = c(ymin, ymax)) +
@@ -256,7 +300,7 @@ draw_radar <- function(df, stage, top = 5, ymin = -10, ymax = 200) {
          caption = "data: cyclingnews.com",
          x = "", y = "") +
     coord_radar() +
-    grey_theme() +
+    theme_minimal_dark() +
     theme(strip.text.x = element_text(size = rel(2)),
           axis.text.x = element_text(size = rel(2)),
           axis.ticks.y = element_blank(),
@@ -268,7 +312,7 @@ stages_radar <- map(seq_len(length(stages)),
                                  top = 5, ymin = -10, ymax = 200))
 
 # save the plots
-for (i in seq_along(stages_radar)) {
-  ggsave(paste0("tour_de_france_2017/plots/radar_", i, ".png"),
-         stages_radar[[i]], width = 16, height = 9, dpi = 150)
-}
+# for (i in seq_along(stages_radar)) {
+#   ggsave(paste0("tour_de_france_2017/plots/radar_", i, ".png"),
+#          stages_radar[[i]], width = 16, height = 9, dpi = 150)
+# }
