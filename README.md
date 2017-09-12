@@ -1,4 +1,4 @@
-![map_tdf_2017](map_tdf_2017.jpg?raw=true)
+![tdf_logo](tdf_logo.png?raw=true)
 
 <br>
 
@@ -6,7 +6,15 @@
 
 <br>
 
+![time_difference_facets](plots/time_difference_facets.png?raw=true)
+
+<br>
+
 ![rank_top10](plots/rank_top10.png?raw=true)
+
+<br>
+
+![rank_top10_facets](plots/rank_top10_facets.png?raw=true)
 
 <br>
 
