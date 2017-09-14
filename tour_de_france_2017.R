@@ -67,7 +67,7 @@ final_gc <- stages[[length(stages)]] %>%
 
 df <- left_join(df, final_gc, by = "rider")
 
-# the profile of each stage
+# describe the profile of each stage
 stages_profiles <- data_frame(stage = unique(df[["stage"]]),
                               profile = c("ITT", "flat", "hilly", "flat",
                                           "mountain", "flat", "flat",
@@ -77,7 +77,7 @@ stages_profiles <- data_frame(stage = unique(df[["stage"]]),
                                           "mountain", "mountain", "flat",
                                           "ITT", "flat"))
 
-# plot the time difference between C. Froome and the rest of the top 10
+# plot the time difference between Froome and the rest of the top 10
 top_10 <- final_gc %>%
   filter(final_position %in% seq_len(10)) %>%
   pull(rider)
@@ -103,6 +103,7 @@ g <- df %>%
         legend.title = element_blank())
 
 # turn off the clipping to allow the geom_text to be "outside" of the plot
+# there is probably a better way to do it...
 gg <- ggplotGrob(g)
 gg$layout$clip[gg$layout$name == "panel"] = "off"
 grid::grid.draw(gg)
@@ -117,11 +118,7 @@ df %>%
   ggplot(aes(x = stage, y = time_to, group = rider, color = rider)) +
   geom_line(size = 0.85) +
   geom_point(size = 3) +
-  geom_text(data = stages_profiles, aes(x = stage, y = 0,
-                                        label = paste0("(", profile, ")")),
-            vjust = 8, color = "grey30", size = 3, inherit.aes = FALSE) +
-  scale_x_discrete(labels = paste0("Stage ", seq_len(length(stages)))) +
-  facet_wrap( ~ rider, ncol = 3) +
+  facet_wrap(~ rider, ncol = 3) +
   labs(title = "A close race until the final stages",
        subtitle = paste0("Time difference (in seconds) between Christopher ",
                          "Froome and the rest of the top 10\n"),
@@ -169,11 +166,8 @@ df %>%
   ggplot(aes(x = stage, y = position, group = rider, color = rider)) +
   geom_line(size = 0.85) +
   geom_point(size = 3) +
-  geom_text(data = stages_profiles, aes(x = stage, y = 0,
-                                        label = paste0("(", profile, ")")),
-            vjust = 8, color = "grey30", size = 3, inherit.aes = FALSE) +
   scale_x_discrete(labels = paste0("Stage ", seq_len(length(stages)))) +
-  facet_wrap( ~ rider, ncol = 3) +
+  facet_wrap(~ rider, ncol = 3) +
   labs(title = paste0("Christopher Froome never left the top 6 ",
                       "of the general classification"),
        subtitle = "Rank of the riders of the final top 10 after each stage",
@@ -246,7 +240,7 @@ ag2r_fdj <- gridExtra::grid.arrange(teams_ranks[["AG2R La Mondiale"]],
 # ggsave("tour_de_france_2017/plots/ag2r_fdj.png", ag2r_fdj,
 #        width = 16, height = 9, dpi = 150)
 
-# sort of a radar plot to show the time difference to C. Froome after each stage
+# sort of a radar plot to show the time difference to Froome after each stage
 # the function below is adapted from this post:
 # http://www.cmap.polytechnique.fr/~lepennec/R/Radar/RadarAndParallelPlots.html
 
@@ -307,6 +301,7 @@ draw_radar <- function(df, stage, top = 5, ymin = -10, ymax = 200) {
           axis.text.y = element_blank())
 }
 
+# apply the function to each one of the 21 stages
 stages_radar <- map(seq_len(length(stages)),
                     ~ draw_radar(df = df, stage = .x,
                                  top = 5, ymin = -10, ymax = 200))
